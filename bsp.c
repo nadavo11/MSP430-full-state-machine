@@ -18,30 +18,6 @@ void MSP_init()
   P2IES |= 0x0F;                            // P1.x Hi/lo edge
   P2IFG &= ~0x0F;                           // P1.x IFG cleared
 
-  //__bis_SR_register(LPM4_bits + GIE);       // Enter LPM4 w/interrupt
+  __bis_SR_register(LPM4_bits + GIE);       // Enter LPM4 w/interrupt
 }
 
-
-#pragma vector=PORT2_VECTOR
-__interrupt void PORT2_ISR(void) {
-  // Check which button triggered the interrupt
-  if (P2IFG & BIT0) {
-    // Button 0 pressed
-    // Do something
-  }
-  if (P2IFG & BIT1) {
-    // Button 1 pressed
-    // Do something
-  }
-  if (P2IFG & BIT2) {
-    // Button 2 pressed
-    // Do something
-  }
-  if (P2IFG & BIT3) {
-    // Button 3 pressed
-    // Do something
-  }
-
-  // Clear interrupt flags
-  P2IFG &= ~(BIT0 | BIT1 | BIT2 | BIT3);
-}
