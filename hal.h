@@ -8,7 +8,7 @@
 #ifndef HAL_H_
 #define HAL_H_
 
-void delay(int t);
+int PWM_flag;
 
 void LED_blink(int n);
 
