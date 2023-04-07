@@ -9,6 +9,7 @@
 #define HAL_H_
 
 int PWM_flag;
+int state;
 
 void LED_blink(int n);
 

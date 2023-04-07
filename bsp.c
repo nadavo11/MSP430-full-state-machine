@@ -14,8 +14,8 @@ void MSP_init()
   /*P2.0-3 set as out*/
   P2DIR = 0x00;                             // P2.x input
   P2REN |= 0x03;                            // P2.0 ,p2.1 pullup rest pulldown
-  P2IE |= 0x0F;                             // P1.x interrupt enabled
-  P2IES |= 0x0F;                            // P1.x Hi/lo edge
+  P2IE |= 0x0F;                             // P2.x interrupt enabled
+  P2IES |= 0x0F;                            // P2.x Hi/lo edge
   P2IFG &= ~0x0F;                           // P1.x IFG cleared
 
   // Set up P2.7 as a PWM output
@@ -23,8 +23,8 @@ void MSP_init()
   //
   P2SEL &= 0;                            // Select GPIO for P2.7
   P2OUT &= ~BIT7;
-
-  __bis_SR_register(LPM0_bits + GIE);       // Enter LPM4 w/interrupt
+//
+  __bis_SR_register( LPM0_bits + GIE);       // Enter LPM4 w/interrupt
 }
 
 void delay(volatile unsigned int t){
@@ -33,6 +33,10 @@ void delay(volatile unsigned int t){
 
 inline void PWM_signal(int PWM_duty,int PWM_period){
     //TODO: MAKE A PWM SIGNAL
+    P2OUT |= BIT7;
+    delay(50000);
+    P2OUT &= ~BIT7;
+    delay(50000);
 }
 
 inline void PWM_stop(){

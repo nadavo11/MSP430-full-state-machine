@@ -10,6 +10,8 @@
 int ID[9]= {3,1,2,3,4,9,5,0,9};
 volatile unsigned int state_1 = 1;
 int PWM_flag;
+int state;
+
 /************************************************************************
  *                                                                      *
  *                    declarations & helpers                             *
@@ -59,7 +61,9 @@ void inline ISR_1(){
     LEDs = 0;
 }
 void inline ISR_2(){
-    //PWM_signal( PWM_DELAY_75, PWM_DELAY_25);
+    state = 2;
+
+
 }
 void inline ISR_3(){
 
@@ -77,36 +81,37 @@ __interrupt void PORT2_ISR(void) {
   volatile unsigned int i;
   volatile unsigned int t;
 
-  PWM_flag = 0;
+  state = 0;
   if (P2IFG & BIT0){
+      // Button 0 pressed
       ISR_0();
-
-
-    // Button 0 pressed
   }
-
 
 
   if (P2IFG & BIT1) {
     // Button 1 pressed
       ISR_1();
 
-    // Do something
 
   }
   if (P2IFG & BIT2) {
-    // Button 2 pressed
-      void ISR_2();
+      // Enable nested interrupts
+     //__bic_SR_register(LPM0_bits);
+     //__bis_SR_register(GIE);
+      // Button 2 pressed
+      state = 2;
+      ISR_2();
 
     // Do something
   }
   if (P2IFG & BIT3) {
     // Button 3 pressed
-      void ISR_3();
+      ISR_3();
+      P2IFG &= ~BIT2;
     // Do something
   }
 
   // Clear interrupt flags
-  P2IFG &= ~(BIT0 | BIT1 | BIT2 | BIT3);
+  P2IFG &= ~(BIT0 | BIT1| BIT2 | BIT3);
 }
 
