@@ -7,8 +7,6 @@
 
 #include <msp430.h>
 #include <bsp.h>
-int ID[9]= {3,1,2,3,4,9,5,0,9};
-volatile unsigned int state_1 = 1;
 int PWM_flag;
 int state;
 
@@ -38,27 +36,12 @@ void LED_blink(int n){
  *                                                                      *
  ********************************************************************** */
 void inline ISR_0(){
-    int i;
-    for(i = 0; i<9; i++){
-            LEDs = ID[i];
-            delay(DELAY_05_SECS);
-        }
-    LEDs =0;
+    state = 0;
 }
 
 
 void inline ISR_1(){
-    int i;
-    for(i=14; i>0;i--){
-        LEDs = state_1;
-        delay(DELAY_05_SECS);
-
-        state_1 <<= 1;
-        if (state_1 > 0xFF){
-            state_1 = 1;
-        }
-    }
-    LEDs = 0;
+    state = 1;
 }
 void inline ISR_2(){
     state = 2;
@@ -84,22 +67,25 @@ __interrupt void PORT2_ISR(void) {
   state = 0;
   if (P2IFG & BIT0){
       // Button 0 pressed
+      __bic_SR_register(LPM4_bits + GIE);
+
       ISR_0();
   }
 
 
   if (P2IFG & BIT1) {
     // Button 1 pressed
+      __bic_SR_register(LPM4_bits + GIE);
+
       ISR_1();
 
 
   }
   if (P2IFG & BIT2) {
       // Enable nested interrupts
-     //__bic_SR_register(LPM0_bits);
-     //__bis_SR_register(GIE);
+     __bic_SR_register(LPM4_bits);
+     __bis_SR_register(GIE);
       // Button 2 pressed
-      state = 2;
       ISR_2();
 
     // Do something

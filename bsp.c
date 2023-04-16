@@ -24,7 +24,8 @@ void MSP_init()
   P2SEL &= 0;                            // Select GPIO for P2.7
   P2OUT &= ~BIT7;
 //
-  __bis_SR_register( LPM0_bits + GIE);       // Enter LPM4 w/interrupt
+  __bis_SR_register( GIE);       // Enter LPM4 w/interrupt
+
 }
 
 void delay(volatile unsigned int t){
@@ -34,9 +35,9 @@ void delay(volatile unsigned int t){
 inline void PWM_signal(int PWM_duty,int PWM_period){
     //TODO: MAKE A PWM SIGNAL
     P2OUT |= BIT7;
-    delay(50000);
+    delay(5000);
     P2OUT &= ~BIT7;
-    delay(50000);
+    delay(5000);
 }
 
 inline void PWM_stop(){
