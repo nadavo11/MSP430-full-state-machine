@@ -24,7 +24,7 @@ void MSP_init()
   P2SEL &= 0;                            // Select GPIO for P2.7
   P2OUT &= ~BIT7;
 //
-  __bis_SR_register( GIE);       // Enter LPM4 w/interrupt
+  __bis_SR_register( GIE +LPM4_bits);       // Enter LPM4 w/interrupt
 
 }
 

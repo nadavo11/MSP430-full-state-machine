@@ -18,12 +18,12 @@ int main(void)
 {
 
   MSP_init();
-  state = -1;
+  state = 2;
   unsigned int i;
 
   for(;;){
       if(state == -1)
-          __bis_SR_register( LPM4_bits + GIE);       // Enter LPM4 w/interrupt
+          __bis_SR_register( LPM3_bits + GIE);       // Enter LPM4 w/interrupt
 
       if(state == 0){
           for(i = 0; i<9; i++){
@@ -50,6 +50,7 @@ int main(void)
       }
 
       if(state == 2){
+
          PWM_signal( PWM_DUTYCYCLE, PWM_PERIOD);
       }
 
