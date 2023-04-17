@@ -2,6 +2,7 @@
 #include <msp430.h>
 #include <bsp.h>
 
+#define FREQUANCY_us 1
 
 
 void MSP_init()
@@ -14,7 +15,7 @@ void MSP_init()
   /*P2.0-3 set as out*/
   P2DIR = 0x00;                             // P2.x input
   P2REN |= 0x03;                            // P2.0 ,p2.1 pullup rest pulldown
-  P2IE |= 0x0F;                             // P2.x interrupt enabled
+  P2IE |= 0x08;                             // P2.x interrupt enabled
   P2IES |= 0x0F;                            // P2.x Hi/lo edge
   P2IFG &= ~0x0F;                           // P1.x IFG cleared
 
@@ -29,15 +30,16 @@ void MSP_init()
 }
 
 void delay(volatile unsigned int t){
+    // the delay is in microseconds
     while(t--);
 }
 
+
 inline void PWM_signal(int PWM_duty,int PWM_period){
-    //TODO: MAKE A PWM SIGNAL
     P2OUT |= BIT7;
-    delay(5000);
+    delay(PWM_duty);
     P2OUT &= ~BIT7;
-    delay(5000);
+    delay( PWM_period- PWM_duty);
 }
 
 inline void PWM_stop(){

@@ -5,8 +5,8 @@
 #include <hal.h>
 
 // T_mclk = 2^-20
-#define PWM_PERIOD   4000 // 4 kHz PWM frequency
-#define PWM_DUTYCYCLE  3000 // 75% duty cycle
+#define PWM_PERIOD   250 // 4 kHz PWM frequency
+#define PWM_DUTYCYCLE  187 // 75% duty cycle
 
 int ID[9]= {3,1,2,3,4,9,5,0,9};
 volatile unsigned int state_ISR_1 = 1;
@@ -65,7 +65,6 @@ int main(void)
 {
 
   MSP_init();
-  unsigned int i;
 
   for(;;){
       if(state == -1)
