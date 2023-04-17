@@ -33,29 +33,6 @@ void LED_blink(int n){
 
 /************************************************************************
  *                                                                      *
- *                    high-level ISRs for each button                   *
- *                                                                      *
- ********************************************************************** */
-void inline ISR_0(){
-    state = 0;
-}
-
-
-void inline ISR_1(){
-    state = 1;
-}
-void inline ISR_2(){
-    state = 2;
-
-
-}
-void inline ISR_3(){
-
-}
-
-
-/************************************************************************
- *                                                                      *
  *                    HAL drivers - ISR handler                         *
  *                                                                      *
  ********************************************************************** */
@@ -68,14 +45,14 @@ __interrupt void PORT2_ISR(void) {
   state = 0;
   if (P2IFG & BIT0){
       // Button 0 pressed
-      ISR_0();
+      state = 0;
       LPM3_EXIT;
   }
 
 
   if (P2IFG & BIT1) {
     // Button 1 pressed
-      ISR_1();
+      state = 1;
       LPM3_EXIT;
 
 
@@ -83,7 +60,7 @@ __interrupt void PORT2_ISR(void) {
   if (P2IFG & BIT2) {
 
       // Button 2 pressed
-      ISR_2();
+      state = 2;
       LPM3_EXIT;
       // Enable nested interrupts
       //__bis_SR_register(GIE);

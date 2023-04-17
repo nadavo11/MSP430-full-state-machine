@@ -14,6 +14,53 @@ volatile unsigned int state_ISR_1 = 1;
 
 
 
+/************************************************************************
+ *                                                                      *
+ *                    high-level ISRs for each button                   *
+ *                                                                      *
+ ********************************************************************** */
+void inline ISR_0(){
+
+    unsigned int i;
+    for(i = 0; i<9; i++){
+
+        LEDs = ID[i];
+        delay(DELAY_05_SECS);
+    }
+    LEDs =0;
+    state = -1;
+}
+
+
+void inline ISR_1(){
+
+    unsigned int i;
+    for(i=14; i>0;i--){
+        LEDs = state_ISR_1;
+        delay(DELAY_05_SECS);
+
+        state_ISR_1 <<= 1;
+        if (state_ISR_1 > 0xFF){
+            state_ISR_1 = 1;
+        }
+    }
+    LEDs = 0;
+    state = -1;
+
+}
+void inline ISR_2(){
+
+
+}
+void inline ISR_3(){
+
+}
+
+/************************************************************************
+ *                                                                      *
+ *                              Main Function                           *
+ *                                                                      *
+ ********************************************************************** */
 int main(void)
 {
 
@@ -25,27 +72,11 @@ int main(void)
           __bis_SR_register( LPM3_bits + GIE);       // Enter LPM4 w/interrupt
 
       if(state == 0){
-          for(i = 0; i<9; i++){
-                  LEDs = ID[i];
-                  delay(DELAY_05_SECS);
-              }
-
-          LEDs =0;
-          state = -1;
+          ISR_0();
       }
 
       if(state == 1){
-          for(i=14; i>0;i--){
-              LEDs = state_ISR_1;
-              delay(DELAY_05_SECS);
-
-              state_ISR_1 <<= 1;
-              if (state_ISR_1 > 0xFF){
-                  state_ISR_1 = 1;
-              }
-          }
-          LEDs = 0;
-          state = -1;
+          ISR_1();
       }
 
       if(state == 2){

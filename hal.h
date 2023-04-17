@@ -13,10 +13,6 @@ int state;
 
 void LED_blink(int n);
 
-void inline ISR_0();
-void inline ISR_1();
-void inline ISR_2();
-void inline ISR_3();
 
 
 #endif /* HAL_H_ */
