@@ -18,7 +18,6 @@ int main(void)
 {
 
   MSP_init();
-  state = 2;
   unsigned int i;
 
   for(;;){
