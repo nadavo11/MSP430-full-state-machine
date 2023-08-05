@@ -1,48 +1,167 @@
-
-#include <msp430.h>
-#include "../header/bsp.h"
-
-#define FREQUANCY_us 1
-
-
-void MSP_init()
-{
-  WDTCTL = WDTPW + WDTHOLD;                 // Stop watchdog timer
-  /*P1.0-7 set as out*/
-  P1SEL= 0x0;                               // P1 GPIO
-  P1DIR = 0xFF;                             // P1.x output
-  P1OUT = 0x00;                             // P1   set to 0
-  
-  /*P2.0-3 set as out*/
-  P2DIR = 0x00;                             // P2.x input
-  P2REN |= 0x03;                            // P2.0 ,p2.1 pullup rest pulldown
-  P2IE |= 0x0F;                             // P2.x interrupt enabled
-  P2IES |= 0x0F;                            // P2.x Hi/lo edge
-  P2IFG &= ~0x0F;                           // P1.x IFG cleared
-
-  // Set up P2.7 as a PWM output
-  P2DIR |= BIT7;                            // Set P2.7 as output
-  //
-  P2SEL &= 0;                            // Select GPIO for P2.7
-  P2OUT &= ~BIT7;
+#include  "../header/bsp.h"    // private library - BSP layer
+//#include  <msp430xG46x.h> // IDE library
+#include  <msp430g2553.h>          // MSP430x2xx
+////UPDATE14;55
+/*______________________________________
+ *                                      *
+ *         stabalize                    *
+ *______________________________________*/
+/*
+//void stabalize() {
+//    int j;
+//    FLL_CTL0 |= XCAP14PF;                     // Configure load caps
 //
-  __bis_SR_register( GIE +LPM4_bits);       // Enter LPM4 w/interrupt
+//// Wait for xtal to stabilize
+//    do {
+//        IFG1 &= ~OFIFG;                           // Clear OSCFault flag
+//        for ( j = 0x47; j > 0; j--);             // Time for flag to set
+//    } while ((IFG1 & OFIFG));                   // OSCFault flag still set?
+//}
+*/
+/*______________________________________
+ *                                      *
+ *         GPIO configuration           *
+ *______________________________________*/
+void GPIOconfig(void){
+    //P6DIR &= ~BIT6;             // input -> P6.6 -> AMPLIFIER -> DAC0
+
+    TAPortSEL |= TA1;
+    TAPortDIR |= TA1;
+
+    TAPortSEL |= TA2;
+    TAPortDIR &= ~TA2;    
+
+    // LCD configuration
+    LCD_DATA_WRITE &= ~0xF0;
+    LCD_DATA_DIR |= 0xF0;    // P10.4-P10.7 To Output('1')
+    LCD_DATA_SEL &= ~0xF0;   // Bit clear P10.4-P10.7
+    LCD_CTL_SEL  &= ~0xE0;   // Bit clear P9.5-P9.7
+    LCD_CTL_DIR  |= 0xE0;   // Bit clear P9.5-P9.7
+    
+    TriggerDIR |= Trigger;                            // P5.1 output
+    TriggerSEL &= ~Trigger;
+    Trigger_OUT &= ~Trigger;
+
+
+    LDR1SEL |= LDR0;                            // Enable A/D channel A0
+    LDR2SEL |= LDR1;                            // Enable A/D channel A0
+
+    P1DIR &= ~BIT0 + ~BIT3;
+    _BIS_SR(GIE);                     // enable interrupts globally
 
 }
 
-void delay(volatile unsigned int t){
-    // the delay is in microseconds
-    while(t--);
+void TimerA1_Config(){
+    WDTCTL = WDTPW +WDTHOLD;                  // Stop WDT
+    //  TB0_CONFIG
+    TA1CCR0 = MAX_TBR-3;                             // 60 ms Period/2
+
+    //  TB1_CONFIG
+    TA1CCTL1 |= OUTMOD_6 ;                       // TBCCR1 toggle/set
+    TA1CCR1 = MAX_TBR-2;                              // TACCR1 PWM duty cycle
+    
+    //  TB2_CONFIG
+    TA1CCTL2 |= CAP | CCIS_0 | CM_3 | SCS;                       // TACCR2 toggle/set
+
+    TA1CTL |= TASSEL_2 | MC_1 | CCIE;          // counts to CCR0
+
+    _BIS_SR(GIE);                     // enable interrupts globally
 }
 
+void TimerA0_Config(){ 
+    WDTCTL = WDTPW +WDTHOLD;                  // Stop WDT
 
-inline void PWM_signal(int PWM_duty,int PWM_period){
-    P2OUT |= BIT7;
-    delay(PWM_duty);
-    P2OUT &= ~BIT7;
-    delay( PWM_period- PWM_duty);
+    //  TB0_CONFIG
+    TA0CCR0 = MAX_TBR-2;                             // 60 ms Period/2
+
+    //  TB1_CONFIG
+    TACTL |= TASSEL_2 | MC_1 | CCIE;          // counts to CCR0 //WHY DOES IT NEED CCIE RIGHT NOW??
+    //TACTL |= TASSEL_2 | MC_1;
+    _BIS_SR(GIE);                     // enable interrupts globally
+}
+/** _______________________________________________________________________________________________*
+ *                                                                                                 *
+ *                                DCO config                                                       *
+ *                                                                                                 *
+ *  -----------------------------------------------------------------------------------------------*
+ * sets the clock frequency of the microcontroller to                                              *
+ * 1 MHz using the DCO (Digitally Controlled Oscillator).                                          *
+ *                                                                                                 *
+ *_________________________________________________________________________________________________*/
+
+void DCO_config() {
+
+    if (CALBC1_1MHZ==0xFF)                  // If calibration constant erased
+        while(1);                               // do not load, trap CPU!!
+
+
+    DCOCTL = 0;                               // Select lowest DCOx and MODx settings
+
+    BCSCTL1 = CALBC1_1MHZ;                    // Set DCO Frequency Range
+    DCOCTL = CALDCO_1MHZ;                      // Set DCO specific frequency within the range
+
+
+
+    //P2DIR = 0xFF;                             // All uuu.x outputs
+    //P2OUT = 0;                                // All P2.x reset
+    P1SEL = BIT1 + BIT2;                     // P1.1 = RXD, P1.2=TXD
+    P1SEL2 = BIT1 + BIT2;                     // P1.1 = RXD, P1.2=TXD
+//    P1DIR |= RXLED + TXLED;
+    P1OUT &= 0x01;
 }
 
-inline void PWM_stop(){
-    P2OUT &= ~BIT7;                       // power off PWM leg
+void UART_Config() {
+  WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
+
+  
+  UCA0CTL1 |= UCSSEL_2;                     // CLK = SMCLK
+  UCA0BR0 = 104;                            // UART Baud Rate Control registers
+  UCA0BR1 = 0x00;                           // 1MHz 9600
+  UCA0MCTL = UCBRS0;                        // Modulation UCBRSx = 1
+  UCA0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
+  IE2 |= UCA0RXIE;                          // Enable USCI_A0 RX interrupt
 }
+
+void delay_us(unsigned int del){
+    TACTL = TACLR;
+    TACTL |= TASSEL_2 | MC_1 | ID_0;                        // SMCLK, up-down mode
+
+    TA0CCTL0 = CCIE;                                        // TACCR0 interrupt enabled
+    TACCR0 = TAR+del;
+
+
+    __bis_SR_register(LPM0_bits + GIE);
+    TACTL &= ~CCIE;
+
+
+
+  //  TBCCTL4 = OUTMOD_4 + CCIE;
+}
+
+void ADC_config0(){
+    ADC10CTL0 = ADC10SHT_2 + ADC10ON + ADC10IE;             // ADC10ON, interrupt enabled
+    ADC10CTL1 = INCH_0 + ADC10SSEL_3;                       // input A3 and SMCL // ADC10CLK/8
+
+    ADC10AE0 |= BIT0;                                       // P1.3 ADC option select
+}
+
+void ADC_config1(){
+    ADC10CTL0 = ADC10SHT_2 + ADC10ON + ADC10IE;             // ADC10ON, interrupt enabled
+    ADC10CTL1 = INCH_3 + ADC10SSEL_3;                       // input A3 and SMCL // ADC10CLK/8
+    ADC10AE0 |= BIT3;                                       // P1.3 ADC option select
+}
+
+void ADC_start(){
+    ADC10CTL0 |= ENC + ADC10SC;                             // Sampling and conversion start
+    //__bis_SR_register(LPM0_bits + GIE);
+
+}
+
+void ADC_stop(){
+   // ADC10CTL0 &= ~ENC;                             // Sampling and conversion start
+   // ADC10CTL0 &= ~ADC10SC;
+    ADC10CTL0   =0x00;
+    ADC10CTL1   =0x00;
+    ADC10AE0    =0x00;
+}
+
